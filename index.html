@@ -1,0 +1,36 @@
+<html ng-app="pongada">
+<head>
+    <meta charset="UTF-8">
+    <title>Pongadá</title>
+    <link rel="stylesheet" href="css/basic.css"/>
+	<script src="js/angular.min.js"></script>
+	<script src="js/app.js"></script>
+</head>
+<body>
+
+
+    <div  class="pongada" ng-controller="game">
+	{{curPos}}
+        <span class="topline"></span><span class="leftline"></span><span class="rightline"></span><span class="bottomline"></span><span class="digonaloneline"></span><span class="digonaltwoline"></span><span class="centraloneline"></span><span class="centraltwoline"></span>
+		
+        <div ng-mousedown="startDrag(p1)" ng-mouseup="startDrag(null)"  class="playercircle gokuavatar" ng-class="p1.class"></div>
+        <div ng-mousedown="startDrag(p2)" draggable="true" class="playercircle gokuavatar" ng-class="p2.class"></div>
+        <div ng-mousedown="startDrag(p3)" draggable="true" class="playercircle gokuavatar" ng-class="p3.class"></div>
+        <div class="playercircle cellavatar" ng-class="p4.class"></div>
+        <div class="playercircle cellavatar" ng-class="p5.class"></div>
+		
+		
+		
+		<!-- locais do tabuleiro possiveis de drop -->
+        <div ng-mouseenter="setCurPos('p9')" ng-mouseleave="cleanPos()" ng-mouseup="newPos(curPos)" class="playercircle p9"></div>
+        <div class="p2"></div>
+		<div class="p3"></div>
+		<div class="p4"></div>
+		<div class="p5"></div>
+		<div class="p6"></div>
+		<div class="p7"></div>
+		<div class="p8"></div>
+		<div class="p1"></div>
+    </div>
+</body>
+</html>
