@@ -16,7 +16,7 @@ app.service("gameStates", ["$http", function($http){
 app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 
     
-    $scope.learnedStates = {"1110002221": {"parent": null, "weight": 100000}};
+    $scope.learnedStates = {"1110002221": {"parent": [], "weight": 100000}};
     $scope.allStates = {"1110002221": $scope.learnedStates["1110002221"]};
 	 $scope.ends = [
 				"111000000",
@@ -92,45 +92,36 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
     };
 	
 	function winner(stateT){
-		
+		console.log(stateT);
+		console.log($scope.learnedStates);
+		var initialConfigs= ["000000111","111000000"];
+		var currentConfig = "";
+			var lala = [2,1];
 		//if(stateT[9] == 1){
 			if(stateT[9] == 2){
 			 var currentState = stateT;
 
         var elem = $scope.allStates[currentState];
+        var last = $scope.allStates[$scope.lastState];
+        
         if(elem == undefined){
-      
-            var last = $scope.allStates[$scope.lastState];
-
             var allNewSates = possiblePlays(currentState);
             last[currentState] = allNewSates; //setou o currentstate como filho do laststate
-            allNewSates.parent = last;
+            allNewSates.parent = [ last ];
             allNewSates.weight = 100000;
             $scope.allStates[currentState] = allNewSates;
 
             for(var state in allNewSates){
                 if(state != "parent" && state != "weight"){ // n pode olhar nem a seta do pai nem a seta do peso
-                    for(var e=0; e < 9 && $scope.ends[e] != state; e++); //end nao eh o state, end eh uma nova configuracao, que implica em vitoria de alguem
-                    if(e == 9)
-                        allNewSates[state].weight = 100000;
-                    else{
-                        var curDad = allNewSates[state];
-                        var raiz = $scope.allStates["111000222"];
-                        var peso = 0;
-                        do{
-                            curDad.weight = peso++;
-                            curDad = curDad.parent;
-                        }while(curDad != raiz);
-                    }
-                    allNewSates[state].parent = allNewSates;
+                    allNewSates[state].weight = 100000;
+                    allNewSates[state].parent = [ allNewSates ];
                 }
             }
 
         }
 		}
-		var initialConfigs= ["000000111","111000000"];
-		var currentConfig = "";
-		var lala = [2,1];
+		
+		currentConfig = "";
 		for(i = 0; i < 9 ; i++)
 			if(stateT[i] == lala[stateT[9]-1])
 					currentConfig += '1';
@@ -140,26 +131,26 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 		for(i=0; i < $scope.ends.length && currentConfig != $scope.ends[i]; i++);
 		if(i < $scope.ends.length && $scope.ends[i] != initialConfigs[stateT[9]-1]){
 			var cur = $scope.allStates[stateT];
-	
-			if(stateT[9] == '2'){
-				var distance = 200000;
-				while(cur.parent != null && cur.weight == 100000){
-					cur.weight = distance++;
-					cur = cur.parent;
-				}
-			}else{
-				var distance = 0;
-				while(cur.parent != null && cur.weight > distance){
-					cur.weight = distance++;
-					cur = cur.parent;
-				}
-			}
+	//eh aki q eu tenho q verificar todos os parents
+			var dist = cur.weight != 100000 ? cur.weight+1 : 100000;
+			if(stateT[9] == '2')
+				updatePath(cur,dist);
+			else
+				updatePath(cur,0);
+			
 			var players = ["GOKU","CELL"];
 			alert("VITORIA DE " + players[$scope.turn+1-1]);
 		}
 		
 		return (i < $scope.ends.length && $scope.ends[i] != initialConfigs[stateT[9]-1]);
 	}
+	
+	function updatePath(cur,dist){
+		cur.weight = dist;
+		for(var i = 0; i < cur.parent.length; i++)
+			updatePath(cur.parent[i], dist+1);
+	}
+	
     function cellPlaying(){
         //segunda vez q passa n ta atualizando a arvore
         var currentState = "";
