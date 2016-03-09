@@ -16,7 +16,7 @@ app.service("gameStates", ["$http", function($http){
 app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 
 
-    $scope.learnedStates = {"1110002221": {"parent": [], "weight": 100000}};
+    $scope.learnedStates = {"1110002221": {"parent": [], "weight": 100000, "turn": 0}};
     $scope.allStates = {"1110002221": $scope.learnedStates["1110002221"]};
 	 $scope.ends = [
 				"111000000",
@@ -33,6 +33,7 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
        // gameStates.getEnds().then(function(response){
 
        // });
+        $scope.totalPath = ["1110002221"];
 	   $scope.lastState = "1110002221";
         $scope.stopgGame = false;
         $scope.pieces=[];
@@ -70,6 +71,7 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 
     };
 
+
     function possiblePlays(state){
         var possibilities = {};
         for(var i=0; i<9; i++){
@@ -94,7 +96,10 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
         return possibilities;
     };
 
+
 	function winner(stateT){
+        if($scope.totalPath.indexOf(stateT) == -1)
+            $scope.totalPath.unshift(stateT);
         console.log($scope.learnedStates);
 		var initialConfigs= ["000000111","111000000"];
 		var currentConfig = "";
@@ -103,32 +108,34 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 		if(stateT[9] == 2){
 			 var currentState = stateT;
 
-        var elem = $scope.allStates[currentState];
+            var elem = $scope.allStates[currentState];
 
-        var last = $scope.allStates[$scope.lastState];
+            var last = $scope.allStates[$scope.lastState];
 
-        if(elem == undefined){
-            var allNewSates = possiblePlays(currentState);
-            last[currentState] = allNewSates; //setou o currentstate como filho do laststate
+            if(elem == undefined){
+                var allNewSates = possiblePlays(currentState);
+                last[currentState] = allNewSates; //setou o currentstate como filho do laststate
+                last[currentState].parent = [ last ];
+                last[currentState].weight = 100000;
+                last[currentState].turn = 0;
+                $scope.allStates[currentState] = last[currentState];
 
-            allNewSates.parent = [ last ];
-            allNewSates.weight = 100000;
-            $scope.allStates[currentState] = allNewSates;
-
-            for(var state in allNewSates){
-                if(state != "parent" && state != "weight"){ // n pode olhar nem a seta do pai nem a seta do peso
-                    allNewSates[state].weight = 100000;
-                    allNewSates[state].parent = [ allNewSates ];
+                for(var state in last[currentState]){
+                    if(state != "parent" && state != "weight"  && state != "turn"){ // n pode olhar nem a seta do pai nem a seta do peso
+                        last[currentState][state].weight = 100000;
+                        last[currentState][state].parent = [ last[currentState] ];
+                        last[currentState][state].turn = 0;
+                        $scope.allStates[state] = last[currentState][state];
+                    }
                 }
+
             }
 
-        }
-
-        elem = $scope.allStates[currentState];
+   //         elem = $scope.allStates[currentState];
 
 		}
 
-
+        var i;
 		currentConfig = "";
 		for(i = 0; i < 9 ; i++)
 			if(stateT[i] == lala[stateT[9]-1])
@@ -140,11 +147,45 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 		if(i < $scope.ends.length && $scope.ends[i] != initialConfigs[stateT[9]-1]){
 			var cur = $scope.allStates[stateT];
 	//eh aki q eu tenho q verificar todos os parent
-    //1
-			if(stateT[9] == '2')
-				updatePath(cur,200000);
-			else
-				updatePath(cur,0);
+
+			if(stateT[9] == '2') {
+                var dist = 200000;
+                if(cur.weight != 1)
+                updatePath(cur, 200000);
+            }else
+                updatePath(cur,0);
+
+            //atualiza turn se todos os irmaos tiverem turn igual ou for a primeira vez
+            for(var upt= 0; upt < $scope.totalPath.length-1; upt++){
+                var nodeInPath = $scope.allStates[$scope.totalPath[upt]];
+                var directParent = $scope.allStates[$scope.totalPath[upt+1]];
+                var val = nodeInPath.weight;
+                var vturn = nodeInPath.turn;
+                var sameValue = true;
+
+               // if(upt==0){
+                    nodeInPath.turn++;
+                //}
+                //else {
+                //    //for (var key in directParent) {
+                //    //    if (key != "parent" && key != "weight" && key != "turn") {
+                //    //        if (val > $scope.allStates[key].weight) {
+                //    //            sameValue = false;
+                //    //            break;
+                //    //        }
+                //    //        if(val == $scope.allStates[key].weight && vturn > $scope.allStates[key].turn ){
+                //    //            sameValue = false;
+                //    //            break;
+                //    //        }
+                //    //    }
+                //    //}
+                //    if (sameValue)
+                //        nodeInPath.turn++;
+                //    else
+                //        break;
+                //}
+            }
+
 
 			var players = ["GOKU","CELL"];
 
@@ -157,30 +198,18 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 
 
 	function updatePath(cur,peso){
-        console.log("PASSO1");
         if($scope.turn+1 == "1"){ //1 eh goku, 2 eh cell
-
-            console.log("PASSO2");
-            console.log(peso);
-            console.log(cur.weight);
                 if(peso > cur.weight){
-                    console.log("PASSO4");
                     cur.weight = peso-1;
-                    console.log(cur.parent);
                     for(var i=0; i < cur.parent.length; i++){
-                        console.log("PASSO6");
-                        console.log(cur.parent[i].weight);
                         updatePath(cur.parent[i],cur.weight);
                     }
                 }
         }else{
-            console.log("PASSO3");
             if(peso < cur.weight){
-                console.log("PASSO5");
                 cur.weight= peso+1;
-                for(var father in cur.parent){
-                    console.log("PASSO7");
-                    updatePath(father,cur.weight);
+                for(var i=0; i < cur.parent.length; i++){
+                    updatePath(cur.parent[i],cur.weight);
                 }
             }
         }
@@ -199,13 +228,23 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 
 
         var minimum = null;
+
         for(var state in elem){
-            if(state != "parent" && state != "weight"){
+            if(state != "parent" && state != "weight" && state != "turn"){
                 if(minimum == null || $scope.allStates[state].weight < $scope.allStates[minimum].weight)
                     minimum = state;
             }
-
         }
+
+        var minValue = $scope.allStates[minimum].weight;
+
+        for(var state in elem){
+            if(state != "parent" && state != "weight" && state != "turn"){
+                if($scope.allStates[minimum].weight == minValue && ($scope.allStates[state].turn < $scope.allStates[minimum].turn))
+                    minimum = state;
+            }
+        }
+
 
         //descobre quem moveu e move
         var from = -1, to = -1,piece = {};
