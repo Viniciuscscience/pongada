@@ -255,8 +255,17 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
                     minimum = state;
             }
         }
-    
-
+        //ja descobriu quem eh o elemento com o menor peso e com o menor turn, agora de todos os elementos com esta propriedade, pega um aleatoriamente
+    	var choosed = Math.floor((Math.random() * (Object.keys(elem).length -3)) + 1); 
+    	var choosedIndex = 0;
+    	for(var state in elem){
+            if(state != "parent" && state != "weight" && state != "turn"){
+            	if(choosed == choosedIndex){
+            		minimun = state;
+            	}
+            	choosedIndex++;
+            }
+    	}
 
         //descobre quem moveu e move
         var from = -1, to = -1,piece = {};
