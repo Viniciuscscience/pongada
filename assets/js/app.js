@@ -148,12 +148,12 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 			var cur = $scope.allStates[stateT];
 	//eh aki q eu tenho q verificar todos os parent
 
-			if(stateT[9] == '2') {
-                var dist = 200000;
-                if(cur.weight != 1)
-                updatePath(cur, 200000);
-            }else
-                updatePath(cur,0);
+            if(cur.weight == 100000){
+    			if(stateT[9] == '2') {
+                    updatePath(cur, 200000);
+                }else
+                    updatePath(cur,0);
+            }
 
             //atualiza turn se todos os irmaos tiverem turn igual ou for a primeira vez
             for(var upt= 0; upt < $scope.totalPath.length-1; upt++){
@@ -163,7 +163,7 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
                 var vturn = nodeInPath.turn;
                 var sameValue = true;
 
-               // if(upt==0){
+                //if(upt==0){
                     nodeInPath.turn++;
                 //}
                 //else {
@@ -200,20 +200,26 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
 	function updatePath(cur,peso){
         if($scope.turn+1 == "1"){ //1 eh goku, 2 eh cell
                 if(peso > cur.weight){
-                    cur.weight = peso-1;
-                    for(var i=0; i < cur.parent.length; i++){
-                        updatePath(cur.parent[i],cur.weight);
+                    if((200000 - peso) < peso){ //ponderar
+                        cur.weight = peso-1;
+                        for(var i=0; i < cur.parent.length; i++){
+                            updatePath(cur.parent[i],cur.weight);
+                        }
                     }
                 }
         }else{
             if(peso < cur.weight){
-                cur.weight= peso+1;
-                for(var i=0; i < cur.parent.length; i++){
-                    updatePath(cur.parent[i],cur.weight);
+                if((200000 - peso) > peso){ //ponderar
+                    cur.weight= peso+1;
+                    for(var i=0; i < cur.parent.length; i++){
+                        updatePath(cur.parent[i],cur.weight);
+                    }
                 }
             }
         }
 	}
+
+
 
     function cellPlaying(){
         //segunda vez q passa n ta atualizando a arvore
@@ -222,6 +228,7 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
             currentState += $scope.node[k].who;
         currentState += '2';
 
+       // console.log(currentState);
         var elem = $scope.allStates[currentState];
 
         elem = $scope.allStates[currentState];
@@ -230,20 +237,25 @@ app.controller("game", ['$scope',"gameStates", function ($scope, gameStates){
         var minimum = null;
 
         for(var state in elem){
+            //console.log(state);
             if(state != "parent" && state != "weight" && state != "turn"){
-                if(minimum == null || $scope.allStates[state].weight < $scope.allStates[minimum].weight)
+                //if(minimum != null)
+                //console.log($scope.allStates[state].weight +"===="+$scope.allStates[minimum].weight);
+                if(minimum == null || ($scope.allStates[state].weight < $scope.allStates[minimum].weight))
                     minimum = state;
             }
         }
 
+        
         var minValue = $scope.allStates[minimum].weight;
 
         for(var state in elem){
             if(state != "parent" && state != "weight" && state != "turn"){
-                if($scope.allStates[minimum].weight == minValue && ($scope.allStates[state].turn < $scope.allStates[minimum].turn))
+                if($scope.allStates[state].weight == minValue && ($scope.allStates[state].turn < $scope.allStates[minimum].turn))
                     minimum = state;
             }
         }
+    
 
 
         //descobre quem moveu e move
